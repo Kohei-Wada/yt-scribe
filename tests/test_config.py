@@ -8,12 +8,15 @@ channels = ["UCabc"]
 model = "/m.bin"
 """
 
-WITH_SUMMARY = MINIMAL + """
+WITH_SUMMARY = (
+    MINIMAL
+    + """
 [summary]
 endpoint = "http://x/v1"
 model = "m"
 prompt = "p"
 """
+)
 
 
 def write(tmp_path, text):
@@ -43,7 +46,7 @@ def test_channels_are_required(tmp_path):
 
 
 def test_whisper_model_is_required(tmp_path):
-    with pytest.raises(ValueError, match="whisper.model"):
+    with pytest.raises(ValueError, match=r"whisper\.model"):
         load(write(tmp_path, 'channels = ["UCabc"]\n'))
 
 

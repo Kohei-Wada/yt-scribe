@@ -26,7 +26,9 @@ def parse_channel(xml: str) -> list[Video]:
                 id=video_id,
                 url=f"https://www.youtube.com/watch?v={video_id}",
                 title=(entry.findtext("atom:title", "", NS) or "").strip(),
-                published=datetime.fromisoformat(entry.findtext("atom:published", "", NS)),
+                published=datetime.fromisoformat(
+                    entry.findtext("atom:published", "", NS)
+                ),
                 channel=channel,
                 # The feed's media:thumbnail is a maxres URL that 404s for many
                 # videos; hqdefault always exists.
@@ -37,5 +39,7 @@ def parse_channel(xml: str) -> list[Video]:
 
 
 def fetch_channel(channel_id: str, timeout: int = 30) -> list[Video]:
-    with urllib.request.urlopen(FEED_URL.format(channel_id), timeout=timeout) as response:
+    with urllib.request.urlopen(
+        FEED_URL.format(channel_id), timeout=timeout
+    ) as response:
         return parse_channel(response.read().decode("utf-8"))

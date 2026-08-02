@@ -34,8 +34,16 @@ class Store:
             "INSERT OR REPLACE INTO videos"
             " (id, url, title, published, channel, thumbnail, transcript, summary)"
             " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (video.id, video.url, video.title, video.published.isoformat(),
-             video.channel, video.thumbnail, transcript, summary),
+            (
+                video.id,
+                video.url,
+                video.title,
+                video.published.isoformat(),
+                video.channel,
+                video.thumbnail,
+                transcript,
+                summary,
+            ),
         )
         self.conn.commit()
 

@@ -1,4 +1,4 @@
-from datetime import timezone
+from datetime import UTC
 from pathlib import Path
 
 from yt_scribe.sources import parse_channel
@@ -18,7 +18,7 @@ def test_fields_are_populated():
     assert first.title
     assert first.channel
     assert first.published.tzinfo is not None
-    assert first.published.astimezone(timezone.utc)
+    assert first.published.astimezone(UTC)
 
 
 def test_thumbnail_is_derived_from_the_id():

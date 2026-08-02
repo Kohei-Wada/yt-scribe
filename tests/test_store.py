@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from yt_scribe.store import Store
 from yt_scribe.types import Video
@@ -9,7 +9,7 @@ def make_video(video_id="abc123", minute=0):
         id=video_id,
         url=f"https://www.youtube.com/watch?v={video_id}",
         title=f"Title {video_id}",
-        published=datetime(2026, 8, 2, 12, minute, tzinfo=timezone.utc),
+        published=datetime(2026, 8, 2, 12, minute, tzinfo=UTC),
         channel="Channel",
         thumbnail=None,
     )

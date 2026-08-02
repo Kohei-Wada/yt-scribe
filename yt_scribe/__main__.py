@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 import tempfile
+from pathlib import Path
 
 from .config import load
 from .feed import render
@@ -12,17 +13,20 @@ from .sources import fetch_channel
 from .store import Store
 from .summarise import summarise
 from .transcribe import transcribe
+from .types import Video
 
 
 def pending(config, store):
     """Return the videos still to process and how many channels raised."""
-    videos = []
+    videos: list[Video] = []
     channel_failures = 0
     for channel_id in config.channels:
         try:
-            for video in fetch_channel(channel_id):
-                if not store.is_done(video.id):
-                    videos.append(video)
+            videos.extend(
+                video
+                for video in fetch_channel(channel_id)
+                if not store.is_done(video.id)
+            )
         except Exception as exc:
             channel_failures += 1
             print(f"channel {channel_id} failed: {exc}", file=sys.stderr)
@@ -34,28 +38,32 @@ def write_feed(path, text):
     # Render first, then swap: a reader must never see a truncated or partial
     # feed, and os.replace is only atomic within one filesystem, so the
     # temporary file lives beside the target.
-    directory = os.path.dirname(os.path.abspath(path))
-    handle, tmp = tempfile.mkstemp(dir=directory, prefix=".feed-", suffix=".xml")
+    directory = Path(path).resolve().parent
+    handle, tmp_name = tempfile.mkstemp(dir=directory, prefix=".feed-", suffix=".xml")
+    tmp = Path(tmp_name)
     try:
         with os.fdopen(handle, "w", encoding="utf-8") as out:
             out.write(text)
-        # mkstemp makes the file 0600 and os.replace carries that onto the
+        # mkstemp makes the file 0600 and Path.replace carries that onto the
         # target, which would break serving the feed with nginx running as
         # another user. Restore what a plain open(..., "w") would have made.
         umask = os.umask(0)
         os.umask(umask)
-        os.chmod(tmp, 0o666 & ~umask)
-        os.replace(tmp, path)
+        tmp.chmod(0o666 & ~umask)
+        tmp.replace(path)
     except BaseException:
-        os.unlink(tmp)
+        tmp.unlink()
         raise
 
 
 def process(video, config, store):
     with tempfile.TemporaryDirectory() as workdir:
         text = transcribe(
-            video.url, config.whisper_bin, config.whisper_model,
-            config.whisper_device, workdir,
+            video.url,
+            config.whisper_bin,
+            config.whisper_model,
+            config.whisper_device,
+            workdir,
         )
     if text is None:
         print(f"skipped (live) {video.id} {video.title}", file=sys.stderr)
@@ -67,8 +75,11 @@ def process(video, config, store):
     summary = None
     if config.summary:
         summary = summarise(
-            text, config.summary.endpoint, config.summary.model,
-            config.summary.prompt, config.summary.api_key,
+            text,
+            config.summary.endpoint,
+            config.summary.model,
+            config.summary.prompt,
+            config.summary.api_key,
         )
     store.save(video, text, summary)
     print(f"done {video.id} {video.title}", file=sys.stderr)
@@ -78,9 +89,13 @@ def process(video, config, store):
 def main() -> int:
     parser = argparse.ArgumentParser(prog="yt-scribe")
     parser.add_argument("--config", default="config.toml")
-    parser.add_argument("--serve", type=int, metavar="PORT",
-                        help="serve the generated feed on this port (binds "
-                             "0.0.0.0, reachable from the network) and block")
+    parser.add_argument(
+        "--serve",
+        type=int,
+        metavar="PORT",
+        help="serve the generated feed on this port (binds "
+        "0.0.0.0, reachable from the network) and block",
+    )
     args = parser.parse_args()
 
     config = load(args.config)
@@ -99,8 +114,9 @@ def main() -> int:
             print(f"failed {video.id} {video.url}: {exc}", file=sys.stderr)
             failed += 1
 
-    write_feed(config.output,
-               render(store.entries(), config.feed_title, config.feed_url))
+    write_feed(
+        config.output, render(store.entries(), config.feed_title, config.feed_url)
+    )
     print(f"{done} ok, {failed} failed", file=sys.stderr)
 
     if args.serve:

@@ -48,7 +48,9 @@ def test_id_is_stable_and_link_points_at_the_video():
 
 
 def test_markup_in_a_title_is_escaped_not_injected():
-    root = ElementTree.fromstring(render([entry(title="<b>hi</b>")], "T", "http://x/f.xml"))
+    root = ElementTree.fromstring(
+        render([entry(title="<b>hi</b>")], "T", "http://x/f.xml")
+    )
     assert root.findtext("atom:entry/atom:title", namespaces=NS) == "<b>hi</b>"
 
 

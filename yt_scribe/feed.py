@@ -1,7 +1,7 @@
 """Stored entries as Atom, the one interface this project exposes."""
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from xml.etree import ElementTree as ET
 
 ATOM = "http://www.w3.org/2005/Atom"
@@ -32,7 +32,7 @@ def render(entries: list[dict], title: str, self_url: str) -> str:
     feed = ET.Element(f"{{{ATOM}}}feed")
     ET.SubElement(feed, f"{{{ATOM}}}title").text = title
     ET.SubElement(feed, f"{{{ATOM}}}id").text = self_url
-    ET.SubElement(feed, f"{{{ATOM}}}updated").text = datetime.now(timezone.utc).isoformat()
+    ET.SubElement(feed, f"{{{ATOM}}}updated").text = datetime.now(UTC).isoformat()
     ET.SubElement(feed, f"{{{ATOM}}}link", rel="self", href=self_url)
 
     for entry in entries:

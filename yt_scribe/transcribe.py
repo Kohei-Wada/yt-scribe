@@ -1,7 +1,7 @@
 """Audio to text, by shelling out to yt-dlp, ffmpeg and whisper.cpp."""
 
-import os
 import subprocess
+from pathlib import Path
 
 SKIP_STATUSES = ("is_live", "is_upcoming")
 
@@ -17,24 +17,52 @@ def transcribe(url, whisper_bin, model, device, workdir):
     # metadata call of about two seconds.
     probe = subprocess.run(
         ["yt-dlp", "--no-warnings", "--print", "%(live_status)s", "--", url],
-        check=True, capture_output=True, text=True, timeout=120,
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     # None, not "": a stream becomes an ordinary recording once it ends, so it
     # is left unrecorded to be picked up later rather than written off.
     if live_status(probe.stdout) in SKIP_STATUSES:
         return None
 
-    audio = os.path.join(workdir, "audio.opus")
-    pcm = os.path.join(workdir, "pcm.wav")
+    audio = Path(workdir) / "audio.opus"
+    pcm = Path(workdir) / "pcm.wav"
     subprocess.run(
-        ["yt-dlp", "-q", "--no-warnings", "-x", "--audio-format", "opus",
-         "-o", os.path.join(workdir, "audio.%(ext)s"), "--", url],
-        check=True, timeout=1800,
+        [
+            "yt-dlp",
+            "-q",
+            "--no-warnings",
+            "-x",
+            "--audio-format",
+            "opus",
+            "-o",
+            Path(workdir) / "audio.%(ext)s",
+            "--",
+            url,
+        ],
+        check=True,
+        timeout=1800,
     )
     subprocess.run(
-        ["ffmpeg", "-v", "error", "-y", "-i", audio,
-         "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", pcm],
-        check=True, timeout=1800,
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-y",
+            "-i",
+            audio,
+            "-ar",
+            "16000",
+            "-ac",
+            "1",
+            "-c:a",
+            "pcm_s16le",
+            pcm,
+        ],
+        check=True,
+        timeout=1800,
     )
     # -l auto is load-bearing: whisper-cli defaults to English rather than
     # detecting, and mangles other languages silently instead of failing.
@@ -42,6 +70,9 @@ def transcribe(url, whisper_bin, model, device, workdir):
     # capturing stdout alone gives the transcript and nothing else.
     result = subprocess.run(
         [whisper_bin, "-m", model, "-f", pcm, "-dev", device, "-l", "auto"],
-        check=True, stdout=subprocess.PIPE, text=True, timeout=3600,
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+        timeout=3600,
     )
     return result.stdout.strip()

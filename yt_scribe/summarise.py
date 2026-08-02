@@ -4,8 +4,9 @@ import json
 import urllib.request
 
 
-def summarise(text, endpoint, model, prompt, api_key=None,
-              max_chars=20000, timeout=1800):
+def summarise(
+    text, endpoint, model, prompt, api_key=None, max_chars=20000, timeout=1800
+):
     body = {
         "model": model,
         "messages": [

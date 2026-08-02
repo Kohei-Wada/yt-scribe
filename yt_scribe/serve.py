@@ -1,6 +1,7 @@
 """A one-file HTTP server, for users without a web server already running."""
 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 
 
 def serve(path: str, port: int) -> None:
@@ -10,7 +11,7 @@ def serve(path: str, port: int) -> None:
 
         def do_GET(self):
             try:
-                with open(path, "rb") as handle:
+                with Path(path).open("rb") as handle:
                     body = handle.read()
             except FileNotFoundError:
                 self.send_error(404, "feed not generated yet")

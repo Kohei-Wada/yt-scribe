@@ -23,9 +23,7 @@ def install_fake(monkeypatch, captured):
         captured["url"] = request.full_url
         captured["body"] = json.loads(request.data)
         captured["headers"] = dict(request.header_items())
-        return FakeResponse(
-            {"choices": [{"message": {"content": "  要約  "}}]}
-        )
+        return FakeResponse({"choices": [{"message": {"content": "  要約  "}}]})
 
     monkeypatch.setattr(summarise_module.urllib.request, "urlopen", fake_urlopen)
 

@@ -2,6 +2,7 @@
 
 import tomllib
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass(frozen=True)
@@ -27,7 +28,7 @@ class Config:
 
 
 def load(path) -> Config:
-    with open(path, "rb") as handle:
+    with Path(path).open("rb") as handle:
         raw = tomllib.load(handle)
 
     channels = raw.get("channels") or []
