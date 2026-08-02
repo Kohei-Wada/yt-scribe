@@ -23,7 +23,8 @@ repos:
     hooks:
       - id: codespell
         additional_dependencies: [tomli]
-        # The fixture is a document YouTube served; its prose is not ours to correct.
+        # pyproject's skip list covers the bare `codespell` CI runs; pre-commit
+        # passes filenames explicitly, which bypasses skip, so it needs its own.
         exclude: ^tests/fixtures/
 
   - repo: https://github.com/pre-commit/pre-commit-hooks

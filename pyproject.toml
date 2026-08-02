@@ -59,6 +59,12 @@ max-complexity = 10
 [tool.ruff.lint.isort]
 known-first-party = ["yt_scribe"]
 
+[tool.codespell]
+# The fixture is a document YouTube served — its prose, including people's
+# names, is not ours to correct. Configured here rather than in the pre-commit
+# hook so a bare `codespell` run in CI honours it too.
+skip = "./tests/fixtures/*,./uv.lock,./.git"
+
 [tool.mypy]
 python_version = "3.11"
 warn_unused_configs = true
