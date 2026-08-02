@@ -3,14 +3,20 @@ name = "yt-scribe"
 version = "0.1.0"
 description = "Turn YouTube channels into an Atom feed carrying transcripts"
 requires-python = ">=3.11"
+# Empty on purpose: the runtime is the standard library. The heavy lifting is
+# done by yt-dlp, ffmpeg and whisper-cli, which the user installs themselves.
 dependencies = []
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = ["pytest>=8"]
 
 [project.scripts]
 yt-scribe = "yt_scribe.__main__:main"
 
 [build-system]
-requires = ["setuptools>=68"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "yt_scribe"
+module-root = ""

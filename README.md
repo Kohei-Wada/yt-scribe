@@ -26,7 +26,9 @@ use.
 
 `yt-dlp`, `ffmpeg`, and `whisper-cli` from
 [whisper.cpp](https://github.com/ggerganov/whisper.cpp) on PATH, plus a ggml
-model. Python 3.11 or newer. No Python dependencies.
+model. Python 3.11 or newer, and [uv](https://docs.astral.sh/uv/). No Python
+dependencies at runtime — uv is here for the dev environment and the lockfile,
+not because the code needs anything.
 
 A GPU makes this fast rather than possible. On an RTX 5090 through whisper.cpp's
 Vulkan backend, transcription runs at 63-66x realtime — an hour of video in
@@ -38,20 +40,28 @@ vLLM, llama.cpp or a hosted API all work.
 ## Use
 
 ```bash
+git clone https://github.com/Kohei-Wada/yt-scribe && cd yt-scribe
+uv sync
 cp config.example.toml config.toml
 $EDITOR config.toml          # channel ids, whisper model path, device
-python -m yt_scribe --config config.toml
+uv run yt-scribe --config config.toml
 ```
 
 That writes `feed.xml`. Point a reader at it, either through a web server you
 already run or with the built-in one:
 
 ```bash
-python -m yt_scribe --config config.toml --serve 8110
+uv run yt-scribe --config config.toml --serve 8110
 ```
 
 Run it from a timer. Each run picks up new videos, transcribes at most `limit`
 of them, and rewrites the feed.
+
+Tests need no external binaries and no network:
+
+```bash
+uv run pytest
+```
 
 ## Configuration
 
