@@ -39,6 +39,12 @@ def write_feed(path, text):
     try:
         with os.fdopen(handle, "w", encoding="utf-8") as out:
             out.write(text)
+        # mkstemp makes the file 0600 and os.replace carries that onto the
+        # target, which would break serving the feed with nginx running as
+        # another user. Restore what a plain open(..., "w") would have made.
+        umask = os.umask(0)
+        os.umask(umask)
+        os.chmod(tmp, 0o666 & ~umask)
         os.replace(tmp, path)
     except BaseException:
         os.unlink(tmp)
