@@ -7,7 +7,7 @@ from xml.etree import ElementTree as ET
 ATOM = "http://www.w3.org/2005/Atom"
 
 # XML 1.0 forbids these and ElementTree passes them through, which makes the
-# whole document unparseable. Stripped at render time, never at store time: the
+# whole document unparsable. Stripped at render time, never at store time: the
 # stored transcript stays exactly what whisper printed.
 _FORBIDDEN = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 

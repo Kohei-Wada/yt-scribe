@@ -65,11 +65,19 @@ uv's own interpreter cannot verify TLS and every channel fetch fails with
 SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt uv run yt-scribe --config config.toml
 ```
 
-Tests need no external binaries and no network:
+## Development
+
+`make help` lists everything. The tests need no external binaries and no
+network, so the whole check runs anywhere:
 
 ```bash
-uv run pytest
+make install    # uv sync --dev
+make hooks      # pre-commit, including the commit-message linter
+make check      # lint, typecheck, test — the same three CI runs
 ```
+
+CI runs those on every push and pull request, and the test job runs on 3.11 and
+3.13 because 3.11 is the floor `tomllib` sets.
 
 ## Configuration
 
