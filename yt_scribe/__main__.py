@@ -6,6 +6,7 @@ import tempfile
 
 from .config import load
 from .feed import render
+from .serve import serve
 from .sources import fetch_channel
 from .store import Store
 from .summarise import summarise
@@ -48,6 +49,8 @@ def process(video, config, store):
 def main() -> int:
     parser = argparse.ArgumentParser(prog="yt-scribe")
     parser.add_argument("--config", default="config.toml")
+    parser.add_argument("--serve", type=int, metavar="PORT",
+                        help="serve the generated feed on this port and block")
     args = parser.parse_args()
 
     config = load(args.config)
@@ -69,6 +72,10 @@ def main() -> int:
     with open(config.output, "w", encoding="utf-8") as handle:
         handle.write(render(store.entries(), config.feed_title, config.feed_url))
     print(f"{done} ok, {failed} failed", file=sys.stderr)
+
+    if args.serve:
+        print(f"serving {config.output} on :{args.serve}", file=sys.stderr)
+        serve(config.output, args.serve)
 
     # One video failing is ordinary operation. A run that achieved nothing
     # despite having work means something systemic — a missing binary, a dead
