@@ -3,4 +3,5 @@ __pycache__/
 .pytest_cache/
 *.db
 *.xml
+!tests/fixtures/*.xml
 .venv/
