@@ -1,9 +1,19 @@
 """Stored entries as Atom, the one interface this project exposes."""
 
+import re
 from datetime import datetime, timezone
 from xml.etree import ElementTree as ET
 
 ATOM = "http://www.w3.org/2005/Atom"
+
+# XML 1.0 forbids these and ElementTree passes them through, which makes the
+# whole document unparseable. Stripped at render time, never at store time: the
+# stored transcript stays exactly what whisper printed.
+_FORBIDDEN = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+
+
+def _clean(text: str) -> str:
+    return _FORBIDDEN.sub("", text)
 
 
 def _content(entry: dict) -> str:
@@ -14,7 +24,7 @@ def _content(entry: dict) -> str:
     if entry.get("summary"):
         parts.append(entry["summary"])
     parts.append(entry["transcript"])
-    return "\n\n".join(parts)
+    return _clean("\n\n".join(parts))
 
 
 def render(entries: list[dict], title: str, self_url: str) -> str:
@@ -27,7 +37,7 @@ def render(entries: list[dict], title: str, self_url: str) -> str:
 
     for entry in entries:
         node = ET.SubElement(feed, f"{{{ATOM}}}entry")
-        ET.SubElement(node, f"{{{ATOM}}}title").text = entry["title"]
+        ET.SubElement(node, f"{{{ATOM}}}title").text = _clean(entry["title"])
         # urn: rather than the URL, so the identity survives a URL change.
         ET.SubElement(node, f"{{{ATOM}}}id").text = f"urn:youtube:{entry['id']}"
         ET.SubElement(node, f"{{{ATOM}}}link", rel="alternate", href=entry["url"])

@@ -45,3 +45,12 @@ def test_channels_are_required(tmp_path):
 def test_whisper_model_is_required(tmp_path):
     with pytest.raises(ValueError, match="whisper.model"):
         load(write(tmp_path, 'channels = ["UCabc"]\n'))
+
+
+@pytest.mark.parametrize("missing", ["endpoint", "model", "prompt"])
+def test_summary_keys_are_required(tmp_path, missing):
+    keys = {"endpoint": '"http://x/v1"', "model": '"m"', "prompt": '"p"'}
+    del keys[missing]
+    section = "\n".join(f"{k} = {v}" for k, v in keys.items())
+    with pytest.raises(ValueError, match=f"summary.{missing}"):
+        load(write(tmp_path, MINIMAL + "[summary]\n" + section + "\n"))

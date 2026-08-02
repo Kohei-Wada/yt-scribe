@@ -41,6 +41,9 @@ def load(path) -> Config:
     summary_raw = raw.get("summary")
     summary = None
     if summary_raw:
+        for key in ("endpoint", "model", "prompt"):
+            if not summary_raw.get(key):
+                raise ValueError(f"config: summary.{key} is required")
         summary = SummaryConfig(
             endpoint=summary_raw["endpoint"],
             model=summary_raw["model"],

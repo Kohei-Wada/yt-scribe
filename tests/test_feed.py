@@ -50,3 +50,13 @@ def test_id_is_stable_and_link_points_at_the_video():
 def test_markup_in_a_title_is_escaped_not_injected():
     root = ElementTree.fromstring(render([entry(title="<b>hi</b>")], "T", "http://x/f.xml"))
     assert root.findtext("atom:entry/atom:title", namespaces=NS) == "<b>hi</b>"
+
+
+def test_control_characters_do_not_break_the_document():
+    dirty = entry(transcript="before\x0cafter", title="ti\x0ctle")
+    xml = render([dirty], "T", "http://x/f.xml")
+    root = ElementTree.fromstring(xml)
+    content = root.find("atom:entry/atom:content", NS).text
+    assert "before" in content and "after" in content
+    assert "\x0c" not in content
+    assert root.findtext("atom:entry/atom:title", namespaces=NS) == "title"

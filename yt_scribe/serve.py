@@ -1,10 +1,13 @@
 """A one-file HTTP server, for users without a web server already running."""
 
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
 def serve(path: str, port: int) -> None:
     class Handler(BaseHTTPRequestHandler):
+        # A client that connects and sends nothing must not hold the server.
+        timeout = 30
+
         def do_GET(self):
             try:
                 with open(path, "rb") as handle:
@@ -21,4 +24,4 @@ def serve(path: str, port: int) -> None:
         def log_message(self, *args):
             pass
 
-    HTTPServer(("0.0.0.0", port), Handler).serve_forever()
+    ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
