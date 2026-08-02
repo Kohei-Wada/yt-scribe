@@ -1,0 +1,29 @@
+# Channel IDs, not handles. Find one in a channel page's URL, or in the
+# "channel_id" parameter of https://www.youtube.com/feeds/videos.xml
+channels = [
+  "UCsBjURrPoezykLs9EqgamOA",  # Fireship
+]
+
+db = "yt-scribe.db"
+output = "feed.xml"
+feed_title = "yt-scribe"
+feed_url = "http://localhost:8110/feed.xml"
+
+# Videos to process per run. A backlog clears over several runs rather than
+# in one very long one.
+limit = 20
+
+[whisper]
+bin = "whisper-cli"
+model = "/srv/models/whisper/ggml-large-v3-turbo.bin"
+# Which GPU whisper.cpp should use. Not auto-detected: picking wrong is not an
+# error, just far slower, so it must be a deliberate choice. Check the device
+# list that `whisper-cli -h` prints.
+device = "0"
+
+# Delete this whole section to store transcripts without summaries.
+[summary]
+endpoint = "http://127.0.0.1:11434/v1"
+model = "qwen3.6:27b"
+prompt = "次の動画の文字起こしを日本語で要約してください。要点を3〜5文で、前置きや見出しをつけずに本文だけを書いてください。"
+# api_key = "..."
