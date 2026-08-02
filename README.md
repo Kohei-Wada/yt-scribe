@@ -57,6 +57,14 @@ uv run yt-scribe --config config.toml --serve 8110
 Run it from a timer. Each run picks up new videos, transcribes at most `limit`
 of them, and rewrites the feed.
 
+On NixOS, and anywhere else the system CA bundle is not where Python expects it,
+uv's own interpreter cannot verify TLS and every channel fetch fails with
+`CERTIFICATE_VERIFY_FAILED`. Point it at the bundle:
+
+```bash
+SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt uv run yt-scribe --config config.toml
+```
+
 Tests need no external binaries and no network:
 
 ```bash
