@@ -66,7 +66,12 @@ and add the corresponding line to the `Config(...)` returned by `load`, directly
 after `limit=int(raw.get("limit", 20)),`:
 
 ```python
+    return Config(
+        # ...
+        limit=int(raw.get("limit", 20)),
         min_duration=int(raw.get("min_duration", 0)),
+        # ...
+    )
 ```
 
 - [ ] **Step 4: Run the tests to verify they pass**
