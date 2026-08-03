@@ -13,6 +13,10 @@ feed_url = "http://localhost:8110/feed.xml"
 # in one very long one.
 limit = 20
 
+# Skip videos shorter than this many seconds, before transcribing them. 180 is
+# YouTube's upper bound for a short. Set to 0 to transcribe everything.
+min_duration = 180
+
 [whisper]
 bin = "whisper-cli"
 model = "/srv/models/whisper/ggml-large-v3-turbo.bin"

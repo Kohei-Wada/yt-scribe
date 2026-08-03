@@ -31,6 +31,7 @@ def test_defaults_are_applied(tmp_path):
     assert config.whisper_bin == "whisper-cli"
     assert config.whisper_device == "0"
     assert config.limit == 20
+    assert config.min_duration == 0
     assert config.summary is None
 
 
@@ -57,3 +58,13 @@ def test_summary_keys_are_required(tmp_path, missing):
     section = "\n".join(f"{k} = {v}" for k, v in keys.items())
     with pytest.raises(ValueError, match=f"summary.{missing}"):
         load(write(tmp_path, MINIMAL + "[summary]\n" + section + "\n"))
+
+
+def test_min_duration_is_read(tmp_path):
+    config = load(
+        write(
+            tmp_path,
+            'channels = ["UCabc"]\nmin_duration = 180\n[whisper]\nmodel = "/m.bin"\n',
+        )
+    )
+    assert config.min_duration == 180
