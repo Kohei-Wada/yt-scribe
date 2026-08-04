@@ -55,7 +55,9 @@ uv run yt-scribe --config config.toml --serve 8110
 ```
 
 Run it from a timer. Each run picks up new videos, transcribes at most `limit`
-of them, and rewrites the feed.
+of them, and rewrites the feed. Videos shorter than `min_duration` seconds are
+skipped without being transcribed, which keeps shorts out of the feed; it is off
+by default, and 180 is YouTube's upper bound for a short.
 
 On NixOS, and anywhere else the system CA bundle is not where Python expects it,
 uv's own interpreter cannot verify TLS and every channel fetch fails with

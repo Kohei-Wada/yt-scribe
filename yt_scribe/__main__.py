@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .config import load
 from .feed import render
+from .probe import SKIP_STATUSES, probe
 from .serve import serve
 from .sources import fetch_channel
 from .store import Store
@@ -17,7 +18,7 @@ from .types import Video
 
 
 def pending(config, store):
-    """Return the videos still to process and how many channels raised."""
+    """Return every video still to process and how many channels raised."""
     videos: list[Video] = []
     channel_failures = 0
     for channel_id in config.channels:
@@ -31,7 +32,7 @@ def pending(config, store):
             channel_failures += 1
             print(f"channel {channel_id} failed: {exc}", file=sys.stderr)
     videos.sort(key=lambda v: v.published, reverse=True)
-    return videos[: config.limit], channel_failures
+    return videos, channel_failures
 
 
 def write_feed(path, text):
@@ -65,9 +66,6 @@ def process(video, config, store):
             config.whisper_device,
             workdir,
         )
-    if text is None:
-        print(f"skipped (live) {video.id} {video.title}", file=sys.stderr)
-        return False
     if not text.strip():
         # whisper-cli can exit 0 with no stdout. Recording it would mark the
         # video done forever with no content, so treat it as a failure.
@@ -83,7 +81,6 @@ def process(video, config, store):
         )
     store.save(video, text, summary)
     print(f"done {video.id} {video.title}", file=sys.stderr)
-    return True
 
 
 def main() -> int:
@@ -106,9 +103,29 @@ def main() -> int:
 
     done = failed = 0
     for video in videos:
+        # Counting failures too: a video that fails every time would otherwise
+        # make every run walk the entire backlog queued behind it.
+        if done + failed >= config.limit:
+            break
         try:
-            if process(video, config, store):
-                done += 1
+            status, duration = probe(video.url)
+            if status in SKIP_STATUSES:
+                # A stream becomes an ordinary recording once it ends, so it is
+                # left unrecorded to be picked up later rather than written off.
+                print(f"skipped (live) {video.id} {video.title}", file=sys.stderr)
+                continue
+            if (
+                config.min_duration
+                and duration is not None
+                and duration < config.min_duration
+            ):
+                print(
+                    f"skipped (short {duration}s) {video.id} {video.title}",
+                    file=sys.stderr,
+                )
+                continue
+            process(video, config, store)
+            done += 1
         except Exception as exc:
             # Left unrecorded on purpose: the next run retries it.
             print(f"failed {video.id} {video.url}: {exc}", file=sys.stderr)

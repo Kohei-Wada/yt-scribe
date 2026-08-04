@@ -21,6 +21,7 @@ class Config:
     feed_title: str
     feed_url: str
     limit: int
+    min_duration: int
     whisper_bin: str
     whisper_model: str
     whisper_device: str
@@ -59,6 +60,7 @@ def load(path) -> Config:
         feed_title=raw.get("feed_title", "yt-scribe"),
         feed_url=raw.get("feed_url", "http://localhost:8110/feed.xml"),
         limit=int(raw.get("limit", 20)),
+        min_duration=int(raw.get("min_duration", 0)),
         whisper_bin=whisper.get("bin", "whisper-cli"),
         whisper_model=whisper["model"],
         whisper_device=str(whisper.get("device", "0")),
