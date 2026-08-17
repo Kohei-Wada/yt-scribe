@@ -1,28 +1,45 @@
 """Audio to text, by shelling out to yt-dlp, ffmpeg and whisper.cpp."""
 
 import subprocess
+import time
 from pathlib import Path
+
+
+def download_audio(url, workdir, attempts=3, delay=30):
+    # YouTube serves an occasional 403 for a video it will hand over happily a
+    # minute later: the same URL, with this same command line, failed three
+    # times running and then succeeded untouched. Without a retry one 403 costs
+    # the whole video until the next nightly run, which then gets one attempt
+    # of its own — videos were observed failing two nights in a row that way.
+    for attempt in range(1, attempts + 1):
+        try:
+            subprocess.run(
+                [
+                    "yt-dlp",
+                    "-q",
+                    "--no-warnings",
+                    "-x",
+                    "--audio-format",
+                    "opus",
+                    "-o",
+                    Path(workdir) / "audio.%(ext)s",
+                    "--",
+                    url,
+                ],
+                check=True,
+                timeout=1800,
+            )
+            return
+        except subprocess.CalledProcessError:
+            if attempt == attempts:
+                raise
+            time.sleep(delay)
 
 
 def transcribe(url, whisper_bin, model, device, workdir):
     audio = Path(workdir) / "audio.opus"
     pcm = Path(workdir) / "pcm.wav"
-    subprocess.run(
-        [
-            "yt-dlp",
-            "-q",
-            "--no-warnings",
-            "-x",
-            "--audio-format",
-            "opus",
-            "-o",
-            Path(workdir) / "audio.%(ext)s",
-            "--",
-            url,
-        ],
-        check=True,
-        timeout=1800,
-    )
+    download_audio(url, workdir)
     subprocess.run(
         [
             "ffmpeg",
